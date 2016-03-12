@@ -7,6 +7,7 @@
 #include "Board.cpp"
 #include "Random.cpp"
 #include "Human.cpp"
+#include "Minimax.cpp"
 
 WINDOW* window;
 Player* firstPlayer = NULL;
@@ -58,6 +59,8 @@ void render(){
 Player* getClass(char* name){
     if (strcmp(name, "Random") == 0){
         return new Random();
+    }else if (strcmp(name, "Minimax") == 0){
+        return new Minimax();
     }else if (strcmp(name, "Human") == 0){
         return new Human();
     }
