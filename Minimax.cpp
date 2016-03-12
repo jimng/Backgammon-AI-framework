@@ -88,7 +88,7 @@ int Minimax::computeScore(char bd[][20], char sign){
         for (int j = 0; j < 20; j++){
             totalScore += this->computeVectorScore(bd, sign, i, j, 0, 1);
             totalScore += this->computeVectorScore(bd, sign, i, j, 1, 0);
-            totalScore += this->computeVectorScore(bd, sign, i, j, 1, 0);
+            totalScore += this->computeVectorScore(bd, sign, i, j, 1, 1);
             totalScore += this->computeVectorScore(bd, sign, i, j, -1, 1);
         }
     }
