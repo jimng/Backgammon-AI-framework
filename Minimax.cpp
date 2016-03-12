@@ -38,7 +38,7 @@ char Minimax::anotherSign(char sign){
 
 int Minimax::minimax(char bd[][20], char sign, int depth, int alpha, int beta, bool isMaximize, int *bestY, int *bestX){
     int dumpX, dumpY;
-    if (depth >= this->maxDepth || Board::determineWinner(bd) != -1){
+    if (depth >= this->maxDepth){
         return this->computeScore(bd, sign);
     }
     char newBd[20][20];
