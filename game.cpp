@@ -2,7 +2,8 @@
 #include <iostream>
 #include <cstring>
 #include <string>
-#include "curses.h"
+#include <unistd.h>
+#include <ncurses.h>
 
 #include "Board.cpp"
 #include "Random.cpp"
