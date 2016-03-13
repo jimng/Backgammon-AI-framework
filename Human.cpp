@@ -1,29 +1,38 @@
-#include "curses.h"
 #include "Player.cpp"
 
+#ifndef HUMAN
+#define HUMAN
 class Human:public Player{
     public:
-        void getNextStep(char[][20], char, int*, int*);
+        View* view;
+
+        Human(View*);
+        void getNextStep(Board*, int, int*, int*);
     private:
 
 };
 
-void Human::getNextStep(char bd[][20], char sign, int* row, int* column){
-    move(Board::cursorY * 2 + 2, Board::cursorX * 4 + 3);
+/********** Public **********/
+
+Human::Human(View* view) : view(view){
+}
+
+void Human::getNextStep(Board* board, int playerNum, int* row, int* column){
     int ch;
     do{
         ch=getch();
         if (ch == KEY_UP){
-            if (Board::cursorY > 0) Board::cursorY--;
+            view->moveCursorUp(board);
         }else if (ch == KEY_DOWN){
-            if (Board::cursorY < 19) Board::cursorY++;
+            view->moveCursorDown(board);
         }else if (ch == KEY_LEFT){
-            if (Board::cursorX > 0) Board::cursorX--;
+            view->moveCursorLeft(board);
         }else if (ch == KEY_RIGHT){
-            if (Board::cursorX < 19) Board::cursorX++;
+            view->moveCursorRight(board);
         }
-        move(Board::cursorY * 2 + 2, Board::cursorX * 4 + 3);
     }while(ch != '\n');
-    *row = Board::cursorY;
-    *column = Board::cursorX;
+    view->getCursorPosition(row, column);
 }
+
+/********** Private **********/
+#endif

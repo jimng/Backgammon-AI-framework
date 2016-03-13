@@ -1,134 +1,115 @@
-#include <ncurses.h>
+#include <vector>
 
 #ifndef BOARD
 #define BOARD
 class Board{
     public:
-        static WINDOW* window;
-        const static char charSet[2];
-        static int cursorX;
-        static int cursorY;
-        static char bd[20][20];
+        int h;
+        int w;
+        // Length for winning
+        int l;
+        // 0 = unfilled, 1 = Player1 filled, 2 = player2 filled
+        std::vector< std::vector<unsigned char> > board;
+        bool isHighlight;
+        std::vector< std::vector<bool> > highlightBitmap;
 
-        static void initGame();
-        static void endGame();
-        static void render();
-        static void highlightWinning();
-
-        static bool isMoveValid(int, int);
-        static void fill(int, int, int);
-        static int determineWinner();
+        Board(int, int, int);
+        // 0 = invalid, 1 = valid
+        bool fill(int, int, int);
+        // 0 = Still playing, 1 = Player1, 2 = Player2, 3 = Draw
+        int determineWinner();
     private:
-        static bool findWinningVector(int*, int*, int*, int*);
-        static int isWinningVector(int, int, int, int);
-        static bool isFull();
 
-        static void highlightVector(int, int, int, int);
+        bool isMoveValid(int, int);
+        bool findWinningVector(int*, int*, int*, int*);
+        int isWinningVector(int, int, int, int);
+        bool isFull();
 };
 
 /********* Public *********/
 
-WINDOW* Board::window = NULL;
-const char Board::charSet[2] = {'O', 'X'};
-int Board::cursorX = 0;
-int Board::cursorY = 0;
-char Board::bd[20][20];
+Board::Board(int h, int w, int l) : h(h), w(w), l(l){
+    this->board = std::vector< std::vector<unsigned char> >(h, std::vector<unsigned char>(w, (unsigned char) 0));
+    this->isHighlight = false;
+}
 
-void Board::initGame(){
-    Board::window = initscr();
-    keypad(stdscr,TRUE);
-    for (int i = 0; i < 20; i++){
-        for (int j = 0; j < 20; j++){
-            Board::bd[i][j] = ' ';
-        }
+bool Board::fill(int row, int column, int playerNum){
+    if (isMoveValid(row, column)){
+        this->board[row][column] = (unsigned char) playerNum;
+        return true;
+    }else{
+        return false;
     }
-}
-
-void Board::endGame(){
-    delwin(Board::window);
-    endwin();
-    refresh();
-}
-
-void Board::render(){
-    for (int i = 0; i < 41; i++){
-        for (int j = 0; j < 81; j++){
-            char ch = ' ';
-            if (i % 2 == 0 && j % 4 == 0){
-                ch = '+';
-            }else if (i % 2 == 0 && j % 4 == 2){
-                ch = '-';
-            }else if (i % 2 != 0 && j % 4 == 0){
-                ch = '|';
-            }else if (i % 2 != 0 && j % 4 == 2){
-                ch = Board::bd[i / 2][j / 4];
-            }
-            mvaddch(i + 1, j + 1, ch);
-        }
-    }
-    refresh();
-    move(Board::cursorY * 2 + 2, Board::cursorX * 4 + 3);
-}
-
-void Board::highlightWinning(){
-    int row, column, dy, dx;
-    Board::findWinningVector(&row, &column, &dy, &dx);
-    Board::highlightVector(row, column, dy, dx);
-}
-
-bool Board::isMoveValid(int row, int column){
-    if (Board::bd[row][column] != ' ') return false;
-    else return true;
-}
-
-void Board::fill(int row, int column, int playerNum){
-    Board::bd[row][column] = Board::charSet[playerNum];
 }
 
 int Board::determineWinner(){
     int row, column, dy, dx;
-    if (Board::findWinningVector(&row, &column, &dy, &dx)){
-        if (Board::bd[row][column] == charSet[0]) return 0;
-        else return 1;
+    if (this->findWinningVector(&row, &column, &dy, &dx)){
+        // highlight
+        this->isHighlight = true;
+        this->highlightBitmap = std::vector< std::vector<bool> >(h, std::vector<bool>(w, 0));
+        for (int k = 0; k < this->l; k++){
+            this->highlightBitmap[row + dy * k][column + dx * k] = true;
+        }
+
+        return this->board[row][column];
+    }else if (this->isFull()){
+        return 3;
+    }else{
+        return 0;
     }
-    if (Board::isFull()) return 2;
-    else return -1;
 }
 
 /********* Private *********/
 
+bool Board::isMoveValid(int row, int column){
+    if (this->board[row][column] != 0){
+        return false;
+    }else{
+        return true;
+    }
+}
+
 bool Board::findWinningVector(int* row, int *column, int *dy, int *dx){
-    for (int i = 0; i < 20; i++){
-        for (int j = 0; j < 20; j++){
+    for (int i = 0; i < this->h; i++){
+        for (int j = 0; j < this->w; j++){
             *row = i;
             *column = j;
             // Horizontal
-            if (j < 16){
+            if (j < this->w - this->l + 1){
                 *dy = 0;
                 *dx = 1;
-                int winner = Board::isWinningVector(*row, *column, *dy, *dx);
-                if (winner != -1) return true;
+                int winner = this->isWinningVector(*row, *column, *dy, *dx);
+                if (winner != 0){
+                    return true;
+                }
             }
             // Vertical
-            if (i < 16){
+            if (i < this->h - this->l + 1){
                 *dy = 1;
                 *dx = 0;
-                int winner = Board::isWinningVector(*row, *column, *dy, *dx);
-                if (winner != -1) return true;
+                int winner = this->isWinningVector(*row, *column, *dy, *dx);
+                if (winner != 0){
+                    return true;
+                }
             }
             // Diagonal (\)
-            if (i < 16 && j < 16){
+            if (i < this->h - this->l + 1 && j < this->w - this->l + 1){
                 *dy = 1;
                 *dx = 1;
-                int winner = Board::isWinningVector(*row, *column, *dy, *dx);
-                if (winner != -1) return true;
+                int winner = this->isWinningVector(*row, *column, *dy, *dx);
+                if (winner != 0){
+                    return true;
+                }
             }
             // Diagnoal (/)
-            if (i > 3 && j < 16){
+            if (i > this->l - 2 && j < this->w - this->l + 1){
                 *dy = -1;
                 *dx = 1;
-                int winner = Board::isWinningVector(*row, *column, *dy, *dx);
-                if (winner != -1) return true;
+                int winner = this->isWinningVector(*row, *column, *dy, *dx);
+                if (winner != 0){
+                    return true;
+                }
             }
         }
     }
@@ -136,30 +117,25 @@ bool Board::findWinningVector(int* row, int *column, int *dy, int *dx){
 }
 
 int Board::isWinningVector(int row, int column, int dy, int dx){
-    if (Board::bd[row][column] == ' ') return -1;
-    for (int k = 1; k < 5; k++){
-        if (Board::bd[row + dy * k][column + dx * k] != Board::bd[row][column]) return -1;
+    if (this->board[row][column] == 0){
+        return 0;
     }
-    if (Board::bd[row][column] == charSet[0]) return 0;
-    else return 1;
+    for (int k = 1; k < this->l; k++){
+        if (this->board[row + dy * k][column + dx * k] != this->board[row][column]){
+            return 0;
+        }
+    }
+    return this->board[row][column];
 }
 
 bool Board::isFull(){
-    for (int i = 0; i < 20; i++){
-        for (int j = 0; j < 20; j++){
-            if (Board::bd[i][j] == ' ') return false;
+    for (int i = 0; i < this->h; i++){
+        for (int j = 0; j < this->w; j++){
+            if (this->board[i][j] == 0){
+                return false;
+            }
         }
     }
     return true;
-}
-
-void Board::highlightVector(int row, int column, int dy, int dx){
-    start_color();
-    init_pair(1, COLOR_RED, COLOR_BLACK);
-    attron(COLOR_PAIR(1));
-    for (int k = 0; k < 5; k++){
-        mvaddch((row + dy * k) * 2 + 2, (column + dx * k) * 4 + 3, Board::bd[row][column]);
-    }
-    attroff(COLOR_PAIR(1));
 }
 #endif

@@ -2,7 +2,7 @@
 #define PLAYER
 class Player{
     public:
-        virtual void getNextStep(char[][20], char, int*, int*){}
+        virtual void getNextStep(Board*, int, int*, int*){}
     private:
 
 };

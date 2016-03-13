@@ -1,53 +1,53 @@
-#include <fstream>
-#include <iostream>
+#include <cstdio>
 #include <cstring>
-#include <string>
 #include <unistd.h>
 
 #include "Board.cpp"
+#include "View.cpp"
 #include "Random.cpp"
 #include "Human.cpp"
 #include "Minimax.cpp"
 
-Player* getClass(char* name){
+Player* getClass(char* name, View* view){
     if (strcmp(name, "Random") == 0){
         return new Random();
     }else if (strcmp(name, "Minimax") == 0){
         return new Minimax();
     }else if (strcmp(name, "Human") == 0){
-        return new Human();
+        return new Human(view);
     }
     return NULL;
 }
 
 int main(int argc, char **argv){
 
-    Player* firstPlayer = getClass(argv[1]);
-    Player* secondPlayer = getClass(argv[2]);
+    Board* board = new Board(20, 20, 5);
+    View* view = new View();
+
+    Player* firstPlayer = getClass(argv[1], view);
+    Player* secondPlayer = getClass(argv[2], view);
+
+    view->init();
+    view->render(board);
 
     int gameResult = -1;
-
-    Board::initGame();
-    Board::render();
-
-    bool activePlayerNum = 0;
-    Player* players[2] = {firstPlayer, secondPlayer};
-    while((gameResult = Board::determineWinner()) == -1){
+    int activePlayerNum = 1;
+    Player* players[3] = {NULL, firstPlayer, secondPlayer};
+    while((gameResult = board->determineWinner()) == 0){
         Player* activePlayer = players[activePlayerNum];
         int selectedRow = 0, selectedColumn = 0;
         do{
-            activePlayer->getNextStep(Board::bd, Board::charSet[activePlayerNum], &selectedRow, &selectedColumn);
-        }while(!Board::isMoveValid(selectedRow, selectedColumn));
-        Board::fill(selectedRow, selectedColumn, activePlayerNum);
-        activePlayerNum = !activePlayerNum;
-        Board::render();
+            view->render(board);
+            activePlayer->getNextStep(board, activePlayerNum, &selectedRow, &selectedColumn);
+        }while(!board->fill(selectedRow, selectedColumn, activePlayerNum));
+        activePlayerNum = 3 - activePlayerNum;
+        view->render(board);
         usleep(50000);
     }
 
-    Board::highlightWinning();
-    move(1, 1);
+    view->render(board);
     getch();
-    Board::endGame();
+    view->end();
 
     if (gameResult == 0){
         printf("Player 1 (%s) wins for this game\n", argv[1]);
