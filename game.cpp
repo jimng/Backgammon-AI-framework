@@ -49,9 +49,9 @@ int main(int argc, char **argv){
     getch();
     view->end();
 
-    if (gameResult == 0){
+    if (gameResult == 1){
         printf("Player 1 (%s) wins for this game\n", argv[1]);
-    }else if (gameResult == 1){
+    }else if (gameResult == 2){
         printf("Player 2 (%s) wins for this game\n", argv[2]);
     }else{
         printf("Draw\n");
