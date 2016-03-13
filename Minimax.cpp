@@ -45,8 +45,10 @@ int Minimax::minimax(Board* board, int playerNum, int depth, int alpha, int beta
                 if (board->board[i][j] == 0){
                     newBoard->board[i][j] = playerNum;
                     int newV = this->minimax(newBoard, playerNum, depth + 1, alpha, beta, false, &dumpX, &dumpY);
-                    if (newV > v){
+                    if (v == -Minimax::INF || newV > v){
                         *bestY = i; *bestX = j;
+                    }
+                    if (newV > v){
                         v = newV;
                     }
                     alpha = std::max(alpha, v);
@@ -63,8 +65,10 @@ int Minimax::minimax(Board* board, int playerNum, int depth, int alpha, int beta
                 if (board->board[i][j] == 0){
                     newBoard->board[i][j] = 3 - playerNum;
                     int newV = this->minimax(newBoard, playerNum, depth + 1, alpha, beta, true, &dumpX, &dumpY);
-                    if (newV < v){
+                    if (v == Minimax::INF || newV < v){
                         *bestY = i; *bestX = j;
+                    }
+                    if (newV < v){
                         v = newV;
                     }
                     beta = std::min(beta, v);
